@@ -13,4 +13,8 @@ jobs:
       - run: python -m pip install --upgrade pip
       - run: python -m pip install -e .
       - run: python -m unittest discover -s tests -v
-      - run: cloudpulse --format json --output report.json
+      - name: CLI smoke check
+        run: |
+          cloudpulse --help
+          cloudpulse --format json --output report.json || true
+          python -c "import json; report = json.load(open('report.json')); assert 'incident_id' in report and 'checks' in report and report['checks'], report; print('CLI produced a well-formed incident report:', report['overall_status'])"

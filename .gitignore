@@ -4,3 +4,5 @@ __pycache__/
 *.egg-info/
 .pytest_cache/
 report.json
+demo-video/build/
+incident_test.json

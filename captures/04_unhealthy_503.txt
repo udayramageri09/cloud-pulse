@@ -1,0 +1,18 @@
+CloudPulse Incident Report
+Incident ID: CP-20261105123520-125c58
+Generated: 2026-11-05T12:35:20.489277+00:00
+Host: UdayRam (Windows-11-10.0.26200-SP0, Python 3.12.10)
+Overall status: CRITICAL
+Checks: 6 total - 5 info, 0 warning, 1 critical
+
+[INFO] system - platform=Windows-11-10.0.26200-SP0, python=3.12.10, uptime_seconds=None
+[INFO] cpu - usage_percent=None, logical_cores=18, detail=CPU utilization is currently implemented for Linux /proc/stat.
+    Symptom: CPU utilization is currently implemented for Linux /proc/stat.
+[INFO] memory - detail=Memory utilization is currently implemented for Linux /proc/meminfo.
+    Symptom: Memory utilization is currently implemented for Linux /proc/meminfo.
+[INFO] disk - path=C:\, usage_percent=51.8, free_bytes=238984192000, total_bytes=495687036928
+[INFO] processes - scanned=0, top_by_memory=[]
+[CRITICAL] http (http://127.0.0.1:18080/health) - http_status=503, error=HTTP Error 503: Service Unavailable, duration_ms=39.8
+    Symptom: http (http://127.0.0.1:18080/health) failed: HTTP Error 503: Service Unavailable
+    Next step: Compare with the TCP result: a reachable port with a failing HTTP response points at the application or proxy, not the network path
+    Next step: Inspect application/proxy logs to distinguish a gateway error from an application error
