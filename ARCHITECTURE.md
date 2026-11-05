@@ -1,5 +1,25 @@
 # Architecture and design notes
 
+## Diagram
+
+```mermaid
+flowchart LR
+    CLI[CloudPulse CLI\nargparse] --> SYS[System diagnostics\nCPU / memory / disk / uptime / processes]
+    CLI --> NET[Network diagnostics\nDNS / TCP / HTTP]
+    SYS --> RES[Structured check results]
+    NET --> RES
+    RES --> REPORT[Incident report generator\nseverity + symptom + next steps]
+    REPORT --> TEXT[Text report]
+    REPORT --> JSON[JSON report]
+```
+
+```mermaid
+flowchart LR
+    CP[CloudPulse CLI] -->|HTTP/TCP check| PORT["localhost:8080\n(CLOUDPULSE_LAB_PORT)"]
+    PORT --> NGINX[Nginx reverse proxy]
+    NGINX -->|proxy_pass| APP[Demo application\nhealthy / fail / unhealthy routes]
+```
+
 ## Data flow
 
 `cli.py` validates user input (including `--url` scheme and `--tcp` HOST:PORT syntax) and calls
@@ -30,7 +50,7 @@ Process enumeration skips processes that exit or deny access during collection
 (`OSError`/`AttributeError`/`ValueError`, since a vanished `/proc/<pid>` entry can fail in any of
 those ways depending on which read lost the race). Metrics are observations; the only thresholds
 applied are a 90% warning for CPU, memory, and disk -- there is no latency threshold yet (see
-README "Future improvements").
+"Future improvements" below).
 
 CloudPulse's own `check_http`/`check_tcp` timeouts (5s/3s) are shorter than Nginx's default
 `proxy_connect_timeout` (60s) in the failure lab. Without tuning Nginx's timeout down (see
@@ -57,3 +77,16 @@ infer root cause, or persist reports unless the user specifies an output path. T
 an isolated local target bound to `127.0.0.1`, and demonstrates observable symptoms (500, 503, and
 a proxy-to-dead-upstream failure that this environment surfaces as 504 -- see
 [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for exactly what was observed and why).
+
+CloudPulse does not run continuously or alert anyone (one report per invocation), does not support
+Windows/macOS for CPU/memory/process checks (they report `unsupported` rather than fabricating
+numbers), and does not deploy to any cloud provider -- see [DEPLOYMENT.md](DEPLOYMENT.md) for what
+"deployment" means for a CLI tool like this.
+
+## Future improvements
+
+- A `psutil`-based fallback (optional extra, not a hard dependency) so CPU/memory/process checks
+  work cross-platform instead of Linux-only.
+- A configurable latency threshold for the HTTP/TCP checks (currently only CPU/memory/disk have
+  warning thresholds).
+- A `--config` file for repeatable check sets, instead of repeating flags on every run.
