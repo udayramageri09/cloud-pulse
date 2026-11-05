@@ -1,0 +1,84 @@
+{
+  "checks": [
+    {
+      "name": "system",
+      "platform": "Windows-11-10.0.26200-SP0",
+      "python": "3.12.10",
+      "severity": "info",
+      "status": "ok",
+      "uptime_seconds": null
+    },
+    {
+      "detail": "CPU utilization is currently implemented for Linux /proc/stat.",
+      "logical_cores": 18,
+      "name": "cpu",
+      "severity": "info",
+      "status": "unsupported",
+      "symptom": "CPU utilization is currently implemented for Linux /proc/stat.",
+      "usage_percent": null
+    },
+    {
+      "detail": "Memory utilization is currently implemented for Linux /proc/meminfo.",
+      "name": "memory",
+      "severity": "info",
+      "status": "unsupported",
+      "symptom": "Memory utilization is currently implemented for Linux /proc/meminfo."
+    },
+    {
+      "free_bytes": 238984155136,
+      "name": "disk",
+      "path": "C:\\",
+      "severity": "info",
+      "status": "ok",
+      "total_bytes": 495687036928,
+      "usage_percent": 51.8
+    },
+    {
+      "name": "processes",
+      "scanned": 0,
+      "severity": "info",
+      "status": "ok",
+      "top_by_memory": []
+    },
+    {
+      "addresses": [
+        "104.20.23.154",
+        "172.66.147.243"
+      ],
+      "duration_ms": 14.81,
+      "name": "dns",
+      "severity": "info",
+      "status": "ok",
+      "target": "example.com"
+    },
+    {
+      "duration_ms": 9.75,
+      "name": "tcp",
+      "severity": "info",
+      "status": "ok",
+      "target": "127.0.0.1:18080"
+    },
+    {
+      "duration_ms": 35.12,
+      "http_status": 200,
+      "name": "http",
+      "severity": "info",
+      "status": "ok",
+      "target": "http://127.0.0.1:18080/health"
+    }
+  ],
+  "generated_at": "2026-11-05T12:35:32.939985+00:00",
+  "host": {
+    "hostname": "UdayRam",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "python_version": "3.12.10"
+  },
+  "incident_id": "CP-20261105123532-9f0c5a",
+  "overall_status": "healthy",
+  "summary": {
+    "critical": 0,
+    "info": 8,
+    "total": 8,
+    "warning": 0
+  }
+}

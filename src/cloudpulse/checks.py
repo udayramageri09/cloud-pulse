@@ -14,6 +14,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+CPU_WARNING_PERCENT = 90
+MEMORY_WARNING_PERCENT = 90
+DISK_WARNING_PERCENT = 90
+
+
 def check_cpu() -> dict[str, Any]:
     cores = os.cpu_count()
     if sys.platform.startswith("linux") and Path("/proc/stat").exists():
@@ -23,7 +28,8 @@ def check_cpu() -> dict[str, Any]:
         total = second[0] - first[0]
         idle = second[1] - first[1]
         usage = round(100 * (total - idle) / total, 1) if total else 0.0
-        return {"name": "cpu", "status": "ok", "usage_percent": usage, "logical_cores": cores}
+        status = "warning" if usage >= CPU_WARNING_PERCENT else "ok"
+        return {"name": "cpu", "status": status, "usage_percent": usage, "logical_cores": cores}
     return {"name": "cpu", "status": "unsupported", "usage_percent": None, "logical_cores": cores, "detail": "CPU utilization is currently implemented for Linux /proc/stat."}
 
 
@@ -43,18 +49,24 @@ def check_memory() -> dict[str, Any]:
             if match: values[match.group(1)] = int(match.group(2)) * 1024
         total, available = values["MemTotal"], values["MemAvailable"]
         percent = round(100 * (total - available) / total, 1)
-        return {"name": "memory", "status": "warning" if percent >= 90 else "ok", "usage_percent": percent, "available_bytes": available, "total_bytes": total}
+        status = "warning" if percent >= MEMORY_WARNING_PERCENT else "ok"
+        return {"name": "memory", "status": status, "usage_percent": percent, "available_bytes": available, "total_bytes": total}
     return {"name": "memory", "status": "unsupported", "detail": "Memory utilization is currently implemented for Linux /proc/meminfo."}
 
 
 def check_disk(path: str = "/") -> dict[str, Any]:
-    d = shutil.disk_usage(path)
+    try:
+        d = shutil.disk_usage(path)
+    except OSError as exc:
+        return {"name": "disk", "status": "error", "path": path, "error": str(exc)}
     percent = round(100 * d.used / d.total, 1) if d.total else 0.0
-    return {"name": "disk", "status": "warning" if percent >= 90 else "ok", "path": path, "usage_percent": percent, "free_bytes": d.free, "total_bytes": d.total}
+    status = "warning" if percent >= DISK_WARNING_PERCENT else "ok"
+    return {"name": "disk", "status": status, "path": path, "usage_percent": percent, "free_bytes": d.free, "total_bytes": d.total}
 
 
 def check_processes(limit: int = 5) -> dict[str, Any]:
     rows = []
+    scanned = 0
     if sys.platform.startswith("linux") and Path("/proc").exists():
         total_kb = next((int(line.split()[1]) for line in Path("/proc/meminfo").read_text().splitlines() if line.startswith("MemTotal:")), 1)
         for proc in Path("/proc").iterdir():
@@ -64,10 +76,11 @@ def check_processes(limit: int = 5) -> dict[str, Any]:
                 status = (proc / "status").read_text()
                 rss = int(re.search(r"^VmRSS:\s+(\d+)", status, re.M).group(1))
                 rows.append({"pid": int(proc.name), "name": name, "memory_percent": round(100 * rss / total_kb, 3)})
+                scanned += 1
             except (OSError, AttributeError, ValueError):
                 continue
     rows.sort(key=lambda row: row["memory_percent"], reverse=True)
-    return {"name": "processes", "status": "ok", "top_by_memory": rows[:limit]}
+    return {"name": "processes", "status": "ok", "scanned": scanned, "top_by_memory": rows[:limit]}
 
 
 def check_system() -> dict[str, Any]:
@@ -116,4 +129,4 @@ def run_diagnostics(*, dns: str | None = None, tcp: tuple[str, int] | None = Non
         results.append(check_tcp(*tcp))
     if url:
         results.append(check_http(url))
-    return {"generated_at": datetime.now(timezone.utc).isoformat(), "summary": {"total": len(results), "ok": sum(r["status"] == "ok" for r in results), "issues": sum(r["status"] in {"warning", "error"} for r in results), "unsupported": sum(r["status"] == "unsupported" for r in results)}, "checks": results}
+    return {"generated_at": datetime.now(timezone.utc).isoformat(), "checks": results}

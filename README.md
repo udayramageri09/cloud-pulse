@@ -1,80 +1,207 @@
-# CloudPulse
+<p align="center">
+  <img src="assets/banner.svg" alt="CloudPulse - Linux & Network Diagnostics Toolkit" width="100%"/>
+</p>
 
-**Linux & Network Diagnostics Toolkit** — a small Python CLI that gathers host health signals and checks DNS, TCP ports, and HTTP endpoints, then writes a text or JSON incident report.
+<p align="center">
+  <a href="https://github.com/udayramageri09/cloud-pulse/actions/workflows/ci.yml"><img src="https://github.com/udayramageri09/cloud-pulse/actions/workflows/ci.yml/badge.svg" alt="CI status"></a>
+  <a href="https://github.com/udayramageri09/cloud-pulse/actions/workflows/docker-image.yml"><img src="https://github.com/udayramageri09/cloud-pulse/actions/workflows/docker-image.yml/badge.svg" alt="Docker image status"></a>
+  <img src="https://img.shields.io/badge/python-3.10%2B-blue" alt="Python 3.10+">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-informational" alt="MIT License"></a>
+</p>
 
-## Current scope
+CloudPulse is a small Python CLI that performs first-response Linux host and network diagnostics
+-- the same kind of checks a support/SRE engineer runs in the first few minutes of an incident --
+and writes the result as a structured incident report (text or JSON). It has no dependencies
+beyond the Python standard library, and it inspects only the machine it runs on.
 
-- Linux CPU utilization, memory, disk usage, uptime/platform, and top processes by memory use.
-- DNS lookup, TCP connection, and HTTP/HTTPS status and latency checks.
-- Text and JSON reports; nonzero exit status when a check reports an issue.
-- Docker Compose lab with a sample HTTP app behind Nginx for safe local failure exercises.
-- Automated unit tests and GitHub Actions CI.
+## Why this exists
 
-This is a diagnostic aid, not an agent or a production monitoring system. It does not collect logs from arbitrary hosts, make root-cause claims, monitor continuously, or deploy to a cloud provider.
+When something is down, the first questions are always the same: is the host healthy, can the
+network reach the target, and what is the actual observed symptom (not yet the root cause).
+CloudPulse automates asking those questions consistently, so the first few minutes of an
+investigation produce a structured record instead of a handful of manually run commands you
+have to remember and interpret.
 
-## Install and run
+## Key features
 
-Python 3.10+ is required. CloudPulse uses the Python standard library and Linux `/proc` for host metrics. On Linux, macOS, or WSL:
+- **Host diagnostics:** CPU, memory, disk usage, uptime, and the top processes by memory use,
+  parsed from Linux `/proc` -- no `psutil`, no native extensions.
+- **Network diagnostics:** DNS resolution, TCP connectivity, and HTTP/HTTPS status + latency,
+  each with a finite timeout and clean error handling (no stack traces for expected failures).
+- **Incident reports, not just logs:** every run gets an incident ID, host info, a severity
+  classification per check (`info`/`warning`/`critical`), an observed symptom, and suggested next
+  investigation steps -- never a fabricated root cause.
+- **Honest about platform limits:** CPU/memory/process checks report `unsupported` on non-Linux
+  hosts instead of inventing numbers.
+- **A real failure lab:** a Docker Compose environment (demo app + Nginx) to safely reproduce and
+  observe 200/500/503/504 scenarios on your own machine.
 
-```bash
-python -m venv .venv
-source .venv/bin/activate
-python -m pip install -e .
-cloudpulse --dns example.com --tcp example.com:443 --url https://example.com
-cloudpulse --format json --output incident.json --dns example.com --url https://example.com
-```
+## Demo video
 
-On Windows PowerShell, activate with `.venv\Scripts\Activate.ps1`. Disk checks use the system root path by default. CPU and memory utilization and process listing are currently Linux `/proc` checks; on other systems these checks report `unsupported` rather than inventing measurements.
-
-The command exits `0` when all selected checks are okay and `1` when at least one check reports an issue. DNS/TCP/HTTP checks are opt-in so a basic host report needs no external network access.
-
-## Failure simulation lab
-
-Requires Docker Engine and the Compose plugin. From this directory:
-
-```bash
-docker compose up --build -d
-cloudpulse --url http://localhost:8080/health --tcp localhost:8080
-```
-
-Exercise these cases:
-
-1. **Healthy:** `docker compose up -d`; `/health` returns HTTP 200 through Nginx.
-2. **Application unavailable / proxy 502:** `docker compose stop app`; run CloudPulse against the URL again. The proxy reports an upstream connection failure.
-3. **Application error:** keep the app running and check `http://localhost:8080/fail`; CloudPulse records HTTP 500.
-4. **Unhealthy endpoint:** `APP_MODE=unhealthy docker compose up -d --force-recreate app`; the app health route returns 503. Reset with `docker compose down` then `docker compose up --build -d`.
-
-Use `docker compose logs app proxy` to compare the observed symptom with service output. Lab-only services bind to localhost through the host port mapping; do not expose this demo service to an untrusted network.
+A ~3 minute walkthrough covering the CLI, the failure-simulation lab, and the incident report
+format: see [`demo-video/`](demo-video/) for the rendered video and its production notes
+(narration script, storyboard, and exactly how it was built).
 
 ## Architecture
 
-```text
-CLI (argparse)
-  ├── host checks (/proc, shutil, platform)
-  ├── network checks (socket / urllib)
-  └── report renderer (text / JSON)
-
-Docker Compose lab: CloudPulse CLI -> localhost:8080 -> Nginx -> demo app
+```mermaid
+flowchart LR
+    CLI[CloudPulse CLI\nargparse] --> SYS[System diagnostics\nCPU / memory / disk / uptime / processes]
+    CLI --> NET[Network diagnostics\nDNS / TCP / HTTP]
+    SYS --> RES[Structured check results]
+    NET --> RES
+    RES --> REPORT[Incident report generator\nseverity + symptom + next steps]
+    REPORT --> TEXT[Text report]
+    REPORT --> JSON[JSON report]
 ```
 
-Checks return structured dictionaries, so the CLI and report formatter remain separate. Network calls have timeouts and expected operating-system/network failures are recorded as check results rather than stack traces.
+```mermaid
+flowchart LR
+    CP[CloudPulse CLI] -->|HTTP/TCP check| PORT["localhost:8080\n(CLOUDPULSE_LAB_PORT)"]
+    PORT --> NGINX[Nginx reverse proxy]
+    NGINX -->|proxy_pass| APP[Demo application\nhealthy / fail / unhealthy routes]
+```
 
-## Troubleshooting notes
+Checks (`checks.py`) report observed facts only. Severity classification, symptoms, and next-step
+suggestions (`report.py`) are computed from those facts afterward -- the two responsibilities are
+deliberately kept separate so the tool never conflates "what happened" with "what to do about it."
+See [ARCHITECTURE.md](ARCHITECTURE.md) for more detail.
 
-| Symptom | First checks | Likely next step |
+## Technology stack
+
+Python 3.10+ (standard library only: `argparse`, `socket`, `urllib`, `shutil`, `pathlib`) for the
+CLI; Docker Compose + Nginx + a small stdlib HTTP server for the failure lab; GitHub Actions for
+CI and Docker image builds; `unittest` for tests.
+
+## Installation
+
+```bash
+python -m venv .venv && source .venv/bin/activate   # .venv\Scripts\Activate.ps1 on Windows
+python -m pip install -e .
+```
+
+Or run it in a container without installing anything locally:
+
+```bash
+docker build -t cloudpulse:local .
+docker run --rm cloudpulse:local --url https://example.com
+```
+
+Full install/distribution options (Docker image, GHCR, Codespaces, releases) are in
+[DEPLOYMENT.md](DEPLOYMENT.md).
+
+## Quick start
+
+```bash
+cloudpulse --dns example.com --tcp example.com:443 --url https://example.com
+cloudpulse --format json --output incident.json --dns example.com --url https://example.com
+cloudpulse --verbose   # host-only report, no network access needed
+```
+
+Exit code is `0` when `overall_status` is `healthy`, `1` when it is `degraded`/`critical`, and `2`
+on a usage error (invalid arguments).
+
+## Example output
+
+Actually captured from a run of this CLI against the failure-simulation lab described below
+(trimmed; full captures are in [`captures/`](captures/)):
+
+```text
+CloudPulse Incident Report
+Incident ID: CP-20261105123430-ca25b8
+Generated: 2026-11-05T12:34:30.610992+00:00
+Host: UdayRam (Windows-11-10.0.26200-SP0, Python 3.12.10)
+Overall status: HEALTHY
+Checks: 8 total - 8 info, 0 warning, 0 critical
+
+[INFO] system - platform=Windows-11-10.0.26200-SP0, python=3.12.10, uptime_seconds=None
+[INFO] cpu - usage_percent=None, logical_cores=18, detail=CPU utilization is currently implemented for Linux /proc/stat.
+[INFO] disk - path=C:\, usage_percent=51.8, free_bytes=238986928128, total_bytes=495687036928
+[INFO] dns (example.com) - addresses=['104.20.23.154', '172.66.147.243'], duration_ms=13.3
+[INFO] tcp (127.0.0.1:18080) - duration_ms=0.98
+[INFO] http (http://127.0.0.1:18080/health) - http_status=200, duration_ms=42.94
+```
+
+And the same target after the app container is stopped:
+
+```text
+[CRITICAL] http (http://127.0.0.1:18080/health) - http_status=504, error=HTTP Error 504: Gateway Time-out, duration_ms=3041.71
+    Symptom: http (http://127.0.0.1:18080/health) failed: HTTP Error 504: Gateway Time-out
+    Next step: Compare with the TCP result: a reachable port with a failing HTTP response points at the application or proxy, not the network path
+    Next step: Inspect application/proxy logs to distinguish a gateway error from an application error
+```
+
+## Docker simulation lab
+
+A local, isolated environment (bound to `127.0.0.1` only) for safely reproducing real failure
+symptoms:
+
+```bash
+./simulation/lab.sh up       # bash/WSL/macOS/Linux
+./simulation/lab.ps1 up      # Windows PowerShell
+cloudpulse --url http://127.0.0.1:8080/health --tcp 127.0.0.1:8080
+```
+
+If port 8080 is already in use on your machine, set `CLOUDPULSE_LAB_PORT` (e.g. `18080`) before
+running `up`.
+
+## Failure investigation scenarios
+
+| Scenario | Command | What CloudPulse actually observed (verified live) |
 |---|---|---|
-| DNS error | Check hostname spelling and resolver configuration (`resolvectl status` on systemd Linux) | Compare with `getent hosts <name>`; determine whether one name or the resolver is affected |
-| TCP error | Confirm host/port and route; run `ss -tn` and `nc -vz <host> <port>` | Check listener, firewall rules, and whether the service binds to the expected interface |
-| HTTP 5xx | Compare the HTTP status with TCP reachability; inspect `docker compose logs app proxy` in the lab | Distinguish proxy/upstream failure from an application response |
-| High memory/disk | Inspect CloudPulse process list; use `ps aux --sort=-%mem` or `df -h` | Identify growth or a full filesystem before restarting services |
+| Healthy | `./simulation/lab.sh up` | `http_status: 200`, `overall_status: healthy` |
+| App down (proxy can't reach upstream) | `./simulation/lab.sh stop-app` | TCP `ok`, HTTP `504 Gateway Time-out` after ~3s |
+| Application error | check `.../fail` | HTTP `500 Internal Server Error` |
+| Unhealthy endpoint | `./simulation/lab.sh unhealthy` | HTTP `503 Service Unavailable` |
 
-These commands are investigation aids; output depends on operating system, permissions, resolver, and network policy.
+Full walkthrough with real Nginx/app logs for each case: [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
+Reset to baseline any time with `./simulation/lab.sh reset`.
 
-## Development
+## Testing
 
 ```bash
 python -m pip install -e .
 python -m unittest discover -s tests -v
 ```
 
-The tests isolate expected network failures with mocks and validate report rendering. Live Docker failure exercises are manual and require Docker; CI runs the Python test suite and a host-only CLI smoke check.
+13 tests cover check classification (severity/symptom assignment), report rendering (text/JSON),
+CPU/disk edge cases (warning threshold, invalid path), and network-failure handling via mocks.
+GitHub Actions runs this suite plus a CLI smoke check on every push; see
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml).
+
+## Project structure
+
+```text
+src/cloudpulse/     CLI, checks, and report rendering
+tests/              unittest suite
+simulation/         failure-lab demo app, Nginx config, lab.sh/lab.ps1
+.devcontainer/      Codespaces / Dev Container config
+.github/workflows/  CI and Docker image build/publish
+Dockerfile          CloudPulse CLI image (multi-stage, non-root)
+demo-video/         video script, storyboard, and render pipeline
+screenshots/        genuine captured CLI/test/lab output, rendered as images
+```
+
+## Limitations
+
+This is a diagnostic aid, not a monitoring platform. It does not:
+
+- Run continuously or alert -- it produces one report per invocation.
+- Collect logs from remote hosts, or SSH anywhere -- it only inspects the machine it runs on.
+- Determine root cause -- it reports observed facts, severity, and suggested next steps.
+- Deploy to any cloud provider -- see [DEPLOYMENT.md](DEPLOYMENT.md) for what "deployment" means
+  for a CLI tool like this.
+- Support Windows/macOS for CPU, memory, or process checks -- these report `unsupported` rather
+  than fabricating numbers (disk and all network checks work everywhere).
+
+## Future improvements
+
+- Linux-only CPU/memory/process checks could gain a `psutil`-based fallback for cross-platform
+  support, as an optional extra rather than a hard dependency.
+- A configurable latency threshold for the HTTP/TCP checks (currently only memory/disk/CPU have
+  warning thresholds).
+- A `--config` file for repeatable check sets, instead of repeating flags each run.
+
+## License
+
+[MIT](LICENSE).

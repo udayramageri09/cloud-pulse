@@ -1,0 +1,17 @@
+CloudPulse Incident Report
+Incident ID: CP-20261105123430-ca25b8
+Generated: 2026-11-05T12:34:30.610992+00:00
+Host: UdayRam (Windows-11-10.0.26200-SP0, Python 3.12.10)
+Overall status: HEALTHY
+Checks: 8 total - 8 info, 0 warning, 0 critical
+
+[INFO] system - platform=Windows-11-10.0.26200-SP0, python=3.12.10, uptime_seconds=None
+[INFO] cpu - usage_percent=None, logical_cores=18, detail=CPU utilization is currently implemented for Linux /proc/stat.
+    Symptom: CPU utilization is currently implemented for Linux /proc/stat.
+[INFO] memory - detail=Memory utilization is currently implemented for Linux /proc/meminfo.
+    Symptom: Memory utilization is currently implemented for Linux /proc/meminfo.
+[INFO] disk - path=C:\, usage_percent=51.8, free_bytes=238986928128, total_bytes=495687036928
+[INFO] processes - scanned=0, top_by_memory=[]
+[INFO] dns (example.com) - addresses=['104.20.23.154', '172.66.147.243'], duration_ms=13.3
+[INFO] tcp (127.0.0.1:18080) - duration_ms=0.98
+[INFO] http (http://127.0.0.1:18080/health) - http_status=200, duration_ms=42.94

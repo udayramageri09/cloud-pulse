@@ -1,0 +1,18 @@
+test_cpu_flags_warning_at_or_above_threshold (test_checks.ChecksTests.test_cpu_flags_warning_at_or_above_threshold) ... ok
+test_disk_returns_error_for_nonexistent_path (test_checks.ChecksTests.test_disk_returns_error_for_nonexistent_path) ... ok
+test_dns_returns_error_for_unresolvable_host (test_checks.ChecksTests.test_dns_returns_error_for_unresolvable_host) ... ok
+test_run_diagnostics_includes_requested_network_checks (test_checks.ChecksTests.test_run_diagnostics_includes_requested_network_checks) ... ok
+test_tcp_returns_error_when_connection_fails (test_checks.ChecksTests.test_tcp_returns_error_when_connection_fails) ... ok
+test_error_check_is_critical (test_reports.ClassifyTests.test_error_check_is_critical) ... ok
+test_ok_check_has_info_severity_and_no_symptom (test_reports.ClassifyTests.test_ok_check_has_info_severity_and_no_symptom) ... ok
+test_unsupported_check_is_info_with_detail_symptom (test_reports.ClassifyTests.test_unsupported_check_is_info_with_detail_symptom) ... ok
+test_warning_check_gets_symptom_and_next_steps (test_reports.ClassifyTests.test_warning_check_gets_symptom_and_next_steps) ... ok
+test_build_incident_assigns_id_host_and_overall_status (test_reports.IncidentTests.test_build_incident_assigns_id_host_and_overall_status) ... ok
+test_json_is_valid_and_preserves_check_results (test_reports.IncidentTests.test_json_is_valid_and_preserves_check_results) ... ok
+test_text_includes_summary_and_failure_symptom (test_reports.IncidentTests.test_text_includes_summary_and_failure_symptom) ... ok
+test_verbose_shows_info_level_symptoms_too (test_reports.IncidentTests.test_verbose_shows_info_level_symptoms_too) ... ok
+
+----------------------------------------------------------------------
+Ran 13 tests in 0.319s
+
+OK

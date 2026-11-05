@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="260" viewBox="0 0 1200 260">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0b1220"/>
+      <stop offset="100%" stop-color="#121a2b"/>
+    </linearGradient>
+    <linearGradient id="pulse" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#2dd4bf" stop-opacity="0.15"/>
+      <stop offset="50%" stop-color="#2dd4bf" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#2dd4bf" stop-opacity="0.15"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="260" fill="url(#bg)"/>
+  <text x="70" y="118" font-family="'Segoe UI', Helvetica, Arial, sans-serif" font-size="64" font-weight="700" fill="#f5f7fa" letter-spacing="1">Cloud<tspan fill="#2dd4bf">Pulse</tspan></text>
+  <text x="72" y="158" font-family="'Segoe UI', Helvetica, Arial, sans-serif" font-size="22" fill="#9aa5b8" letter-spacing="2">LINUX &amp; NETWORK DIAGNOSTICS TOOLKIT</text>
+  <polyline points="70,210 220,210 250,170 280,232 310,190 340,210 1130,210"
+            fill="none" stroke="url(#pulse)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="280" cy="232" r="5" fill="#2dd4bf"/>
+</svg>
