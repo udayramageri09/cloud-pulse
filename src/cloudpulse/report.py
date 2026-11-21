@@ -20,6 +20,10 @@ _NEXT_STEPS: dict[str, list[str]] = {
         "Take a second reading to see whether load is sustained or a brief spike",
         "Check the process list in this report for the busiest processes before restarting anything",
     ],
+    "load": [
+        "Compare the 1/5/15-minute averages: rising means the backlog is growing, falling means it is draining",
+        "High load with low CPU usage usually means tasks blocked on disk or network I/O (check `vmstat 1`, the `wa` column)",
+    ],
     "memory": [
         "Inspect the top-memory process list in this report",
         "Distinguish a steadily growing process (a leak) from generally high but stable usage",
@@ -48,6 +52,8 @@ def _symptom(check: dict[str, Any]) -> str | None:
     if status == "warning":
         if name == "cpu":
             return f"CPU utilization at {check['usage_percent']}% across {check['logical_cores']} logical cores"
+        if name == "load":
+            return f"1-minute load {check['load_1m']} on {check['logical_cores']} cores ({check['per_core_1m']} per core)"
         if name == "memory":
             return f"Memory usage at {check['usage_percent']}%"
         if name == "disk":

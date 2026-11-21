@@ -17,6 +17,11 @@ class ClassifyTests(unittest.TestCase):
         self.assertIn("95.0%", enriched["symptom"])
         self.assertTrue(enriched["next_steps"])
 
+    def test_load_warning_explains_per_core_load(self):
+        enriched = classify({"name": "load", "status": "warning", "load_1m": 6.1, "logical_cores": 4, "per_core_1m": 1.52})
+        self.assertIn("1.52 per core", enriched["symptom"])
+        self.assertTrue(enriched["next_steps"])
+
     def test_error_check_is_critical(self):
         enriched = classify({"name": "dns", "status": "error", "target": "bad.invalid", "error": "not found"})
         self.assertEqual(enriched["severity"], "critical")
