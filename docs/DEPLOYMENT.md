@@ -93,7 +93,7 @@ CloudPulse follows [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATC
 - **PATCH** -- bug fixes and documentation with no interface change.
 
 The version lives in `pyproject.toml` (`project.version`) and is tagged in git as `vMAJOR.MINOR.PATCH`
-(e.g. `v0.2.0`), which is what triggers a GHCR publish (see below). See [CHANGELOG.md](CHANGELOG.md)
+(e.g. `v0.2.0`), which is what triggers a GHCR publish (see below). See [CHANGELOG.md](../CHANGELOG.md)
 for what has actually shipped.
 
 ## Cutting a release

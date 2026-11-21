@@ -2,7 +2,7 @@
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning follows
 [Semantic Versioning](https://semver.org/). Nothing below is tagged yet -- see
-[DEPLOYMENT.md](DEPLOYMENT.md#cutting-a-release) for what a tag push actually triggers.
+[DEPLOYMENT.md](docs/DEPLOYMENT.md#cutting-a-release) for what a tag push actually triggers.
 
 ## [Unreleased]
 

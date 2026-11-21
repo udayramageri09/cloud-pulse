@@ -17,11 +17,11 @@ no dependencies.
 <!-- Uploaded to YouTube? Replace the line below with: [![Watch the demo](https://img.youtube.com/vi/VIDEO_ID/maxresdefault.jpg)](https://youtu.be/VIDEO_ID) -->
 
 <p align="center">
-  <video src="demo-video/cloudpulse-demo.mp4" controls width="720">
+  <video src="docs/media/cloudpulse-demo.mp4" controls width="720">
   </video>
 </p>
 
-<p align="center"><a href="demo-video/cloudpulse-demo.mp4">cloudpulse-demo.mp4</a> -- 2:27, walks through the CLI, a real Docker failure lab (500/503/504), and the incident report format.</p>
+<p align="center"><a href="docs/media/cloudpulse-demo.mp4">cloudpulse-demo.mp4</a> -- 2:27, walks through the CLI, a real Docker failure lab (500/503/504), and the incident report format.</p>
 
 ## Features
 
@@ -56,10 +56,10 @@ Try the failure lab:
 
 | | |
 |---|---|
-| [ARCHITECTURE.md](ARCHITECTURE.md) | Design decisions and why checks/reporting are separate modules |
-| [DEPLOYMENT.md](DEPLOYMENT.md) | Docker image, GHCR, Codespaces, releases |
-| [TROUBLESHOOTING.md](TROUBLESHOOTING.md) | Every lab scenario, with real logs |
-| [screenshots/](screenshots/) | Genuine captured CLI/lab/test output |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Design decisions and why checks/reporting are separate modules |
+| [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Docker image, GHCR, Codespaces, releases |
+| [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Every lab scenario, with real logs |
+| [docs/images/](docs/images/) | Genuine captured CLI/lab/test output |
 | [CHANGELOG.md](CHANGELOG.md) | What's shipped |
 
 ## License
