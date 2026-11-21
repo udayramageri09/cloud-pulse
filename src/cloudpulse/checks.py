@@ -16,6 +16,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -208,13 +209,20 @@ def check_tls(host: str, port: int = 443, timeout: float = 5.0, cafile: str | No
 def run_diagnostics(*, dns: str | None = None, tcp: tuple[str, int] | None = None, url: str | None = None,
                     disk_path: str = os.path.abspath(os.sep)) -> dict[str, Any]:
     results = [check_system(), check_cpu(), check_load(), check_memory(), check_disk(disk_path), check_processes()]
+
+    network = []  # (function, args), in report order
     if dns:
-        results.append(check_dns(dns))
+        network.append((check_dns, (dns,)))
     if tcp:
-        results.append(check_tcp(*tcp))
+        network.append((check_tcp, tcp))
     if url:
-        results.append(check_http(url))
+        network.append((check_http, (url,)))
         parsed = urllib.parse.urlsplit(url)
         if parsed.scheme == "https" and parsed.hostname:
-            results.append(check_tls(parsed.hostname, parsed.port or 443))
+            network.append((check_tls, (parsed.hostname, parsed.port or 443)))
+    if network:
+        # Network checks spend their time waiting on I/O, so run them concurrently:
+        # total time is the slowest check, not the sum. map() keeps the report order.
+        with ThreadPoolExecutor(max_workers=len(network)) as pool:
+            results.extend(pool.map(lambda job: job[0](*job[1]), network))
     return {"generated_at": datetime.now(timezone.utc).isoformat(), "checks": results}
