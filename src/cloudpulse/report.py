@@ -44,6 +44,10 @@ _NEXT_STEPS: dict[str, list[str]] = {
         "Compare with the TCP result: a reachable port with a failing HTTP response points at the application or proxy, not the network path",
         "Inspect application/proxy logs to distinguish a gateway error from an application error",
     ],
+    "tls": [
+        "Check the certificate's expiry and chain with `openssl s_client -connect <host>:443 -servername <host>`",
+        "Renew or re-deploy the certificate before it expires; confirm the full chain (intermediates) is served",
+    ],
 }
 
 
@@ -56,6 +60,8 @@ def _symptom(check: dict[str, Any]) -> str | None:
             return f"1-minute load {check['load_1m']} on {check['logical_cores']} cores ({check['per_core_1m']} per core)"
         if name == "memory":
             return f"Memory usage at {check['usage_percent']}%"
+        if name == "tls":
+            return f"TLS certificate for {check['target']} expires in {check['days_remaining']} days"
         if name == "disk":
             return f"Disk usage at {check['usage_percent']}% on {check['path']}"
     if status == "error":

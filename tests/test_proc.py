@@ -71,3 +71,7 @@ def test_load_warns_when_tasks_queue_beyond_core_count(tmp_path):
     result = checks.check_load(tmp_path, cores=4)
     assert result["status"] == "warning"
     assert result["per_core_1m"] == 1.52
+
+
+def test_custom_threshold_turns_usage_into_a_warning():
+    assert checks.check_memory(FIXTURE, warn_percent=70)["status"] == "warning"
