@@ -4,7 +4,7 @@
   "features": {
     "ghcr.io/devcontainers/features/docker-in-docker:2": {}
   },
-  "postCreateCommand": "python -m pip install -e . && python -m unittest discover -s tests -v",
+  "postCreateCommand": "python -m pip install -e . pytest && python -m pytest",
   "forwardPorts": [8080],
   "portsAttributes": {
     "8080": {
