@@ -20,8 +20,7 @@ class ChecksTests(unittest.TestCase):
         self.assertIn("error", result)
 
     def test_cpu_flags_warning_at_or_above_threshold(self):
-        with patch("cloudpulse.checks.sys.platform", "linux"), \
-             patch("cloudpulse.checks.Path.exists", return_value=True), \
+        with patch("cloudpulse.checks.Path.exists", return_value=True), \
              patch("cloudpulse.checks._cpu_times", side_effect=[(1000, 0), (2000, 50)]):
             result = check_cpu()
         self.assertEqual(result["status"], "warning")
