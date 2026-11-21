@@ -1,4 +1,5 @@
 """Parser tests against a fake /proc tree, so they run on any OS."""
+
 from pathlib import Path
 
 from cloudpulse import checks
@@ -31,8 +32,7 @@ def test_cpu_usage_comes_from_the_delta_of_two_samples(tmp_path, monkeypatch):
 def test_cpu_counts_iowait_as_idle(tmp_path, monkeypatch):
     stat = tmp_path / "stat"
     stat.write_text("cpu  0 0 0 0 0 0 0 0\n")
-    monkeypatch.setattr(checks.time, "sleep",
-                        lambda _s: stat.write_text("cpu  50 0 0 25 25 0 0 0\n"))
+    monkeypatch.setattr(checks.time, "sleep", lambda _s: stat.write_text("cpu  50 0 0 25 25 0 0 0\n"))
     assert checks.check_cpu(tmp_path)["usage_percent"] == 50.0
 
 

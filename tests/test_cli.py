@@ -1,4 +1,5 @@
 """CLI behaviour: exit codes, argument validation and threshold plumbing."""
+
 import json
 
 import pytest
@@ -7,21 +8,28 @@ from cloudpulse import cli
 
 
 def fake_report(*statuses):
-    return {"generated_at": "2026-01-01T00:00:00+00:00",
-            "checks": [{"name": f"c{i}", "status": s} for i, s in enumerate(statuses)]}
+    return {
+        "generated_at": "2026-01-01T00:00:00+00:00",
+        "checks": [{"name": f"c{i}", "status": s} for i, s in enumerate(statuses)],
+    }
 
 
-@pytest.mark.parametrize("statuses, code", [
-    (("ok", "ok"), 0),
-    (("ok", "warning"), 1),
-    (("warning", "error"), 2),
-])
+@pytest.mark.parametrize(
+    "statuses, code",
+    [
+        (("ok", "ok"), 0),
+        (("ok", "warning"), 1),
+        (("warning", "error"), 2),
+    ],
+)
 def test_exit_code_follows_overall_status(monkeypatch, statuses, code, capsys):
     monkeypatch.setattr(cli, "run_diagnostics", lambda **_: fake_report(*statuses))
     assert cli.main([]) == code
 
 
-@pytest.mark.parametrize("argv", [["--tcp", "nohost"], ["--tcp", "h:70000"], ["--url", "ftp://x"], ["--cpu-warn", "150"]])
+@pytest.mark.parametrize(
+    "argv", [["--tcp", "nohost"], ["--tcp", "h:70000"], ["--url", "ftp://x"], ["--cpu-warn", "150"]]
+)
 def test_bad_arguments_exit_3_not_2(argv, capsys):
     with pytest.raises(SystemExit) as exc:
         cli.main(argv)

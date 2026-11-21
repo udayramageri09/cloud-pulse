@@ -5,3 +5,6 @@ __pycache__/
 .pytest_cache/
 report.json
 incident_test.json
+.coverage
+htmlcov/
+.ruff_cache/

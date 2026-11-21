@@ -1,4 +1,5 @@
 """Network checks run concurrently but are reported in a fixed order."""
+
 import time
 
 from cloudpulse import checks
@@ -8,6 +9,7 @@ def slow(name, delay):
     def check(*_args, **_kwargs):
         time.sleep(delay)
         return {"name": name, "status": "ok"}
+
     return check
 
 

@@ -1,4 +1,5 @@
 """TLS checks against a real local TLS server with throwaway certificates."""
+
 import shutil
 import socket
 import ssl
@@ -16,9 +17,28 @@ pytestmark = pytest.mark.skipif(shutil.which("openssl") is None, reason="needs t
 
 def make_cert(tmp_path, days):
     key, cert = tmp_path / f"key{days}.pem", tmp_path / f"cert{days}.pem"
-    subprocess.run(["openssl", "req", "-x509", "-newkey", "rsa:2048", "-nodes", "-keyout", str(key),
-                    "-out", str(cert), "-days", str(days), "-subj", "/CN=localhost",
-                    "-addext", "subjectAltName=DNS:localhost"], check=True, capture_output=True)
+    subprocess.run(
+        [
+            "openssl",
+            "req",
+            "-x509",
+            "-newkey",
+            "rsa:2048",
+            "-nodes",
+            "-keyout",
+            str(key),
+            "-out",
+            str(cert),
+            "-days",
+            str(days),
+            "-subj",
+            "/CN=localhost",
+            "-addext",
+            "subjectAltName=DNS:localhost",
+        ],
+        check=True,
+        capture_output=True,
+    )
     return cert, key
 
 
@@ -83,6 +103,8 @@ def test_expiry_maths_uses_whole_days(monkeypatch):
 
 def test_https_url_adds_a_tls_check(monkeypatch):
     monkeypatch.setattr(checks, "check_http", lambda url: {"name": "http", "status": "ok"})
-    monkeypatch.setattr(checks, "check_tls", lambda host, port, **_: {"name": "tls", "status": "ok", "target": f"{host}:{port}"})
+    monkeypatch.setattr(
+        checks, "check_tls", lambda host, port, **_: {"name": "tls", "status": "ok", "target": f"{host}:{port}"}
+    )
     names = [c["name"] for c in checks.run_diagnostics(url="https://example.test:8443/x")["checks"]]
     assert names[-2:] == ["http", "tls"]
