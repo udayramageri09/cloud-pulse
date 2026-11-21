@@ -23,6 +23,8 @@ from functools import partial
 from pathlib import Path
 from typing import Any
 
+from . import __version__
+
 CPU_WARNING_PERCENT = 90
 MEMORY_WARNING_PERCENT = 90
 DISK_WARNING_PERCENT = 90
@@ -223,7 +225,7 @@ def check_tcp(host: str, port: int, timeout: float = 3.0) -> dict[str, Any]:
 
 def check_http(url: str, timeout: float = 5.0) -> dict[str, Any]:
     started = time.perf_counter()
-    request = urllib.request.Request(url, headers={"User-Agent": "CloudPulse/0.1"})
+    request = urllib.request.Request(url, headers={"User-Agent": f"CloudPulse/{__version__}"})
     try:
         with urllib.request.urlopen(request, timeout=timeout) as response:
             code = response.status

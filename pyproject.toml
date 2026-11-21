@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cloudpulse-diagnostics"
-version = "0.1.0"
+version = "0.2.0"
 description = "A small Linux and network diagnostics CLI for incident triage"
 requires-python = ">=3.10"
 license = "MIT"

@@ -1,12 +1,21 @@
 # Changelog
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning follows
-[Semantic Versioning](https://semver.org/). Nothing below is tagged yet -- see
-[DEPLOYMENT.md](docs/DEPLOYMENT.md#cutting-a-release) for what a tag push actually triggers.
+[Semantic Versioning](https://semver.org/). See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md#cutting-a-release)
+for what a tag push triggers.
 
-## [Unreleased]
+## [0.2.0] - 2026-11-22
 
 ### Added
+- TLS check for `https://` URLs: verified handshake and days until the certificate expires
+  (warning under 14 days); verification failures reported with OpenSSL's reason.
+- Load average check (`/proc/loadavg`), reported per logical core.
+- `--cpu-warn`, `--mem-warn`, `--disk-warn` and `--tls-warn-days` threshold flags.
+- `scripts/e2e_lab.sh`: drives the failure lab through all five scenarios; runs in CI.
+- Fixture-based `/proc` tests (`tests/fixtures/proc`), real-TLS-server tests, CLI exit-code tests
+  and a concurrency timing test (39 tests, 92% coverage).
+- CI: ruff lint and format check, Python 3.10/3.12/3.13 matrix, 85% coverage gate.
+- `logs` verb for `simulation/lab.sh` and `lab.ps1`.
 - Incident report model: `incident_id`, `host` block, `overall_status`
   (`healthy`/`degraded`/`critical`), and per-check `severity`/`symptom`/`next_steps`.
 - CPU usage now has a warning threshold (90%), matching the existing memory/disk thresholds.
@@ -25,13 +34,18 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 - `CLOUDPULSE_LAB_PORT` environment variable so the lab's published port is configurable.
 
 ### Changed
+- Exit codes follow the Nagios plugin convention: 0 healthy, 1 degraded, 2 critical, 3 invalid
+  arguments.
+- Network checks (DNS, TCP, HTTP, TLS) run concurrently; report order is unchanged.
+- Host checks read `/proc` from a configurable root (`CLOUDPULSE_PROC_ROOT`).
+- The lab's Nginx resolves `app` through Docker's DNS, so a recreated app container is followed.
+- Tests moved to pytest; code formatted with ruff.
+- Docs, screenshots and the demo video moved under `docs/`.
 - `docker-compose.yml`: the lab's Nginx port now binds to `127.0.0.1` explicitly (previously bound
   to all interfaces); added healthchecks, `no-new-privileges`, and a read-only filesystem for the
   demo app.
 - `simulation/nginx.conf`: added a 3s `proxy_connect_timeout` so a stopped upstream surfaces as a
   fast `504` instead of hanging on Nginx's 60s default.
-- CLI exit code is now based on `overall_status` (0 = healthy, 1 = degraded/critical) rather than a
-  raw warning/error count.
 
 ### Fixed
 - Text report formatting used a Unicode em dash that Python writes as a Windows-1252 byte (`0x97`)
