@@ -123,7 +123,7 @@ whatever restores the dependency the health check depends on.
 | Observed HTTP status | TCP check | What it tells you |
 |---|---|---|
 | 200 | ok | Healthy, end to end |
-| 502 / 504 | ok | Proxy is up, upstream app is unreachable (stopped, crashed, wrong address). 502 = actively refused; 504 = the proxy's own connection attempt timed out (what this lab actually produces — see Scenario 2) |
+| 502 / 504 | ok | Proxy is up, upstream app is unreachable (stopped, crashed, wrong address). 502 = refused, or `app` no longer resolves; 504 = the proxy's own connection attempt timed out (see Scenario 2) |
 | 500 | ok | Request reached the app; the app's own code/logic failed for that route |
 | 503 | ok | The app is running but reports itself not ready (dependency/health-check failure) |
 | any | error | The network path itself (DNS, routing, firewall, listener) is the problem — check that before looking at the application at all |
