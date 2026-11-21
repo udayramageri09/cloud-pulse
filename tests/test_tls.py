@@ -83,6 +83,6 @@ def test_expiry_maths_uses_whole_days(monkeypatch):
 
 def test_https_url_adds_a_tls_check(monkeypatch):
     monkeypatch.setattr(checks, "check_http", lambda url: {"name": "http", "status": "ok"})
-    monkeypatch.setattr(checks, "check_tls", lambda host, port: {"name": "tls", "status": "ok", "target": f"{host}:{port}"})
+    monkeypatch.setattr(checks, "check_tls", lambda host, port, **_: {"name": "tls", "status": "ok", "target": f"{host}:{port}"})
     names = [c["name"] for c in checks.run_diagnostics(url="https://example.test:8443/x")["checks"]]
     assert names[-2:] == ["http", "tls"]
