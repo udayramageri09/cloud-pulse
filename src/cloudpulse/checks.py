@@ -11,8 +11,10 @@ import platform
 import re
 import shutil
 import socket
+import ssl
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
@@ -21,6 +23,7 @@ from typing import Any
 CPU_WARNING_PERCENT = 90
 MEMORY_WARNING_PERCENT = 90
 DISK_WARNING_PERCENT = 90
+TLS_WARNING_DAYS = 14
 
 
 def proc_root(override: str | os.PathLike[str] | None = None) -> Path:
@@ -174,6 +177,34 @@ def check_http(url: str, timeout: float = 5.0) -> dict[str, Any]:
                 "duration_ms": _elapsed_ms(started)}
 
 
+def _peer_cert_not_after(host: str, port: int, timeout: float, cafile: str | None) -> datetime:
+    """TLS handshake with full verification; return the leaf certificate's expiry time."""
+    context = ssl.create_default_context(cafile=cafile)
+    with socket.create_connection((host, port), timeout=timeout) as sock:
+        with context.wrap_socket(sock, server_hostname=host) as tls:
+            cert = tls.getpeercert()
+    return datetime.fromtimestamp(ssl.cert_time_to_seconds(cert["notAfter"]), tz=timezone.utc)
+
+
+def check_tls(host: str, port: int = 443, timeout: float = 5.0, cafile: str | None = None,
+              now: datetime | None = None) -> dict[str, Any]:
+    """Verify the certificate chain and hostname, and report days until the certificate expires."""
+    started = time.perf_counter()
+    target = f"{host}:{port}"
+    try:
+        not_after = _peer_cert_not_after(host, port, timeout, cafile)
+    except ssl.SSLCertVerificationError as exc:  # expired, self-signed, wrong hostname...
+        return {"name": "tls", "target": target, "status": "error",
+                "error": f"certificate verification failed: {exc.verify_message}", "duration_ms": _elapsed_ms(started)}
+    except OSError as exc:  # refused, timeout, handshake failure (ssl.SSLError is an OSError)
+        return {"name": "tls", "target": target, "status": "error", "error": str(exc),
+                "duration_ms": _elapsed_ms(started)}
+    days = int((not_after - (now or datetime.now(timezone.utc))).total_seconds() // 86400)
+    status = "warning" if days < TLS_WARNING_DAYS else "ok"
+    return {"name": "tls", "target": target, "status": status, "expires_at": not_after.isoformat(),
+            "days_remaining": days, "duration_ms": _elapsed_ms(started)}
+
+
 def run_diagnostics(*, dns: str | None = None, tcp: tuple[str, int] | None = None, url: str | None = None,
                     disk_path: str = os.path.abspath(os.sep)) -> dict[str, Any]:
     results = [check_system(), check_cpu(), check_load(), check_memory(), check_disk(disk_path), check_processes()]
@@ -183,4 +214,7 @@ def run_diagnostics(*, dns: str | None = None, tcp: tuple[str, int] | None = Non
         results.append(check_tcp(*tcp))
     if url:
         results.append(check_http(url))
+        parsed = urllib.parse.urlsplit(url)
+        if parsed.scheme == "https" and parsed.hostname:
+            results.append(check_tls(parsed.hostname, parsed.port or 443))
     return {"generated_at": datetime.now(timezone.utc).isoformat(), "checks": results}
