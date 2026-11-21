@@ -59,7 +59,6 @@ Try the failure lab:
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Design decisions and why checks/reporting are separate modules |
 | [DEPLOYMENT.md](DEPLOYMENT.md) | Docker image, GHCR, Codespaces, releases |
 | [TROUBLESHOOTING.md](TROUBLESHOOTING.md) | Every lab scenario, with real logs |
-| [INTERVIEW_PREPARATION.md](INTERVIEW_PREPARATION.md) | 20+ Q&A on the engineering behind this |
 | [screenshots/](screenshots/) | Genuine captured CLI/lab/test output |
 | [CHANGELOG.md](CHANGELOG.md) | What's shipped |
 

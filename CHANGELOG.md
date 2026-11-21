@@ -21,7 +21,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); version
 - `.devcontainer/devcontainer.json` for GitHub Codespaces / VS Code Dev Containers.
 - `simulation/lab.sh` / `simulation/lab.ps1`: single-command controls for the failure-simulation
   lab (`up`, `down`, `reset`, `healthy`, `unhealthy`, `stop-app`, `start-app`).
-- `TROUBLESHOOTING.md`, `DEPLOYMENT.md`, `CHANGELOG.md`, `INTERVIEW_PREPARATION.md`.
+- `TROUBLESHOOTING.md`, `DEPLOYMENT.md`, `CHANGELOG.md`.
 - `CLOUDPULSE_LAB_PORT` environment variable so the lab's published port is configurable.
 
 ### Changed
