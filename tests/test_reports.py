@@ -18,7 +18,9 @@ class ClassifyTests(unittest.TestCase):
         self.assertTrue(enriched["next_steps"])
 
     def test_load_warning_explains_per_core_load(self):
-        enriched = classify({"name": "load", "status": "warning", "load_1m": 6.1, "logical_cores": 4, "per_core_1m": 1.52})
+        enriched = classify(
+            {"name": "load", "status": "warning", "load_1m": 6.1, "logical_cores": 4, "per_core_1m": 1.52}
+        )
         self.assertIn("1.52 per core", enriched["symptom"])
         self.assertTrue(enriched["next_steps"])
 

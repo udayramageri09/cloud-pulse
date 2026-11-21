@@ -1,8 +1,8 @@
 # Single-command controls for the CloudPulse failure-simulation lab.
-# Usage: ./simulation/lab.ps1 <up|down|reset|healthy|unhealthy|stop-app|start-app>
+# Usage: ./simulation/lab.ps1 <up|down|reset|healthy|unhealthy|stop-app|start-app|logs>
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet("up", "down", "reset", "healthy", "unhealthy", "stop-app", "start-app")]
+    [ValidateSet("up", "down", "reset", "healthy", "unhealthy", "stop-app", "start-app", "logs")]
     [string]$Action
 )
 
@@ -16,4 +16,5 @@ switch ($Action) {
     "unhealthy" { $env:APP_MODE = "unhealthy"; docker compose up -d --force-recreate app }
     "stop-app"  { docker compose stop app }
     "start-app" { docker compose start app }
+    "logs"      { docker compose logs --tail=100 }
 }

@@ -39,7 +39,9 @@ used as a baseline for comparison against the scenarios below.
 cloudpulse --url http://127.0.0.1:8080/health --tcp 127.0.0.1:8080
 ```
 `tcp` still reports `ok` — Nginx is listening and accepts the connection. `http` reports
-`status: error`, `http_status: 504` (Gateway Time-out), after roughly 3 seconds.
+`status: error` with `http_status: 504` (Gateway Time-out) after roughly 3 seconds, or `502`
+(Bad Gateway) once Nginx's cached DNS answer for `app` expires and the stopped container no
+longer resolves. Both mean the same thing: the proxy is up, its upstream is not.
 
 **Actual symptom:** The reverse proxy is up and reachable, but it cannot reach its upstream
 (`app:8000`) — the container is stopped, so there is no listener on that address. In this Docker
@@ -64,9 +66,11 @@ This points directly at the upstream (`172.21.0.2:8000`, the stopped app contain
 Nginx's own listener or the client's network path.
 
 **Resolution:** `./simulation/lab.sh start-app`, then re-run the check to confirm `http_status: 200`.
-Note: restarting `proxy` itself (not just `app`) while `app` is stopped will make Nginx fail to
-start at all (`host not found in upstream "app"`), because Nginx resolves the upstream hostname at
-startup. If you need to restart the proxy, bring `app` up first.
+Note: [`simulation/nginx.conf`](../simulation/nginx.conf) resolves `app` through Docker's embedded
+DNS (`resolver 127.0.0.11`, cached 5s) rather than once at startup. With a plain
+`proxy_pass http://app:8000`, Nginx would keep using the IP it saw at startup, so recreating the
+app container (which can give it a new IP) could leave the proxy pointing at a dead address, and
+the proxy would refuse to start at all while `app` was down (`host not found in upstream "app"`).
 
 ## Scenario 3 — Application error (HTTP 500)
 

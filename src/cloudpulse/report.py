@@ -4,6 +4,7 @@
 classifies those facts into severities and suggests investigation next steps.
 It never asserts a root cause -- only what was observed and what to look at next.
 """
+
 from __future__ import annotations
 
 import json
@@ -57,7 +58,9 @@ def _symptom(check: dict[str, Any]) -> str | None:
         if name == "cpu":
             return f"CPU utilization at {check['usage_percent']}% across {check['logical_cores']} logical cores"
         if name == "load":
-            return f"1-minute load {check['load_1m']} on {check['logical_cores']} cores ({check['per_core_1m']} per core)"
+            return (
+                f"1-minute load {check['load_1m']} on {check['logical_cores']} cores ({check['per_core_1m']} per core)"
+            )
         if name == "memory":
             return f"Memory usage at {check['usage_percent']}%"
         if name == "tls":

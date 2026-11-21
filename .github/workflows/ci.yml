@@ -2,20 +2,50 @@ name: CI
 on:
   push:
   pull_request:
+
 jobs:
-  test:
+  lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: python -m pip install --upgrade pip
-      - run: python -m pip install -e .
-      - run: python -m pip install pytest
-      - run: python -m pytest -v
+      - run: python -m pip install ruff
+      - run: ruff check src tests
+      - run: ruff format --check src tests
+
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: python -m pip install -e ".[dev]"
+      - name: Unit tests with coverage
+        run: python -m pytest -v --cov=cloudpulse --cov-report=term-missing --cov-fail-under=85
       - name: CLI smoke check
         run: |
           cloudpulse --help
-          cloudpulse --format json --output report.json || true
-          python -c "import json; report = json.load(open('report.json')); assert 'incident_id' in report and 'checks' in report and report['checks'], report; print('CLI produced a well-formed incident report:', report['overall_status'])"
+          cloudpulse --dns localhost --format json --output report.json || true
+          python -c "import json; r = json.load(open('report.json')); assert r['incident_id'] and r['checks'], r; print('report OK:', r['overall_status'])"
+
+  e2e-lab:
+    # Brings up the real Docker Compose lab (app + Nginx) and checks every
+    # failure scenario through CloudPulse itself.
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Failure lab end to end
+        run: scripts/e2e_lab.sh
+        env:
+          CLOUDPULSE_LAB_PORT: "18080"
