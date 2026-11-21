@@ -58,6 +58,20 @@ def check_cpu(proc: Path | None = None, sample_seconds: float = 0.1) -> dict[str
     return {"name": "cpu", "status": status, "usage_percent": usage, "logical_cores": cores}
 
 
+def check_load(proc: Path | None = None, cores: int | None = None) -> dict[str, Any]:
+    """1/5/15-minute load averages; warn when runnable tasks exceed the CPU count."""
+    proc = proc_root(proc)
+    cores = cores or os.cpu_count() or 1
+    if not (proc / "loadavg").exists():
+        return {"name": "load", "status": "unsupported", "detail": "Load average is read from /proc/loadavg (Linux only)."}
+    one, five, fifteen = (float(v) for v in (proc / "loadavg").read_text().split()[:3])
+    per_core = round(one / cores, 2)
+    # Load counts runnable (and uninterruptible) tasks; above 1.0 per core means work is queueing.
+    status = "warning" if per_core >= 1.0 else "ok"
+    return {"name": "load", "status": status, "load_1m": one, "load_5m": five, "load_15m": fifteen,
+            "per_core_1m": per_core, "logical_cores": cores}
+
+
 def _meminfo(proc: Path) -> dict[str, int]:
     """Parse /proc/meminfo into bytes."""
     values = {}
@@ -162,7 +176,7 @@ def check_http(url: str, timeout: float = 5.0) -> dict[str, Any]:
 
 def run_diagnostics(*, dns: str | None = None, tcp: tuple[str, int] | None = None, url: str | None = None,
                     disk_path: str = os.path.abspath(os.sep)) -> dict[str, Any]:
-    results = [check_system(), check_cpu(), check_memory(), check_disk(disk_path), check_processes()]
+    results = [check_system(), check_cpu(), check_load(), check_memory(), check_disk(disk_path), check_processes()]
     if dns:
         results.append(check_dns(dns))
     if tcp:

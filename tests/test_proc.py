@@ -57,3 +57,17 @@ def test_missing_proc_is_reported_as_unsupported(tmp_path):
 def test_env_var_overrides_proc_location(monkeypatch):
     monkeypatch.setenv("CLOUDPULSE_PROC_ROOT", str(FIXTURE))
     assert checks.check_memory()["usage_percent"] == 75.0
+
+
+def test_load_is_ok_below_one_task_per_core():
+    result = checks.check_load(FIXTURE, cores=4)
+    assert (result["load_1m"], result["load_5m"], result["load_15m"]) == (0.52, 0.58, 0.59)
+    assert result["per_core_1m"] == 0.13
+    assert result["status"] == "ok"
+
+
+def test_load_warns_when_tasks_queue_beyond_core_count(tmp_path):
+    (tmp_path / "loadavg").write_text("6.10 3.00 1.50 9/600 4242\n")
+    result = checks.check_load(tmp_path, cores=4)
+    assert result["status"] == "warning"
+    assert result["per_core_1m"] == 1.52
