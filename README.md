@@ -39,32 +39,36 @@ failure lab that reproduces real 500/503/502/504 errors, tested end to end in CI
 
 ## Quick start
 
+Run the published container image (no install needed):
+
+```bash
+docker run --rm ghcr.io/udayramageri09/cloud-pulse:0.2.0 --dns github.com --url https://github.com
+```
+
+Or install from source:
+
 ```bash
 python -m pip install -e .
-cloudpulse --dns example.com --tcp example.com:443 --url https://example.com
+cloudpulse --dns github.com --url https://github.com
 ```
 
-Against the failure lab (`./simulation/lab.sh up`, Docker required):
+Example output (the container run above, on a WSL2 laptop):
 
 ```text
-$ cloudpulse --tcp 127.0.0.1:8080 --url http://127.0.0.1:8080/health
 CloudPulse Incident Report
 Overall status: HEALTHY
-Checks: 8 total - 8 info, 0 warning, 0 critical
+Checks: 9 total - 9 info, 0 warning, 0 critical
 
-[INFO] cpu - usage_percent=0.0, logical_cores=2
-[INFO] load - load_1m=0.03, load_5m=0.05, load_15m=0.01, per_core_1m=0.01, logical_cores=2
-[INFO] memory - usage_percent=5.7, available_bytes=7931510784, total_bytes=8413835264
-[INFO] tcp (127.0.0.1:8080) - duration_ms=2.49
-[INFO] http (http://127.0.0.1:8080/health) - http_status=200, duration_ms=9.37
-
-$ cloudpulse --url http://127.0.0.1:8080/fail
-[CRITICAL] http (http://127.0.0.1:8080/fail) - http_status=500, error=HTTP Error 500: Internal Server Error
-    Symptom: http (http://127.0.0.1:8080/fail) failed: HTTP Error 500: Internal Server Error
-    Next step: Compare with the TCP result: a reachable port with a failing HTTP response points at the application or proxy, not the network path
+[INFO] cpu - usage_percent=0.5, logical_cores=18
+[INFO] load - load_1m=0.51, load_5m=0.22, load_15m=0.2, per_core_1m=0.03, logical_cores=18
+[INFO] memory - usage_percent=20.3, available_bytes=6398054400, total_bytes=8026116096
+[INFO] dns (github.com) - addresses=['20.207.73.82'], duration_ms=48.89
+[INFO] http (https://github.com) - http_status=200, duration_ms=142.12
+[INFO] tls (github.com:443) - expires_at=2027-01-27T23:59:59+00:00, days_remaining=67, duration_ms=117.12
 ```
 
-(Output trimmed. `--format json --output report.json` writes the full report as JSON.)
+(Trimmed. `--format json --output report.json` writes the full report as JSON; `--verbose` adds symptoms
+and next steps for every check. A failing check is reported as `[CRITICAL]` with its symptom and next steps.)
 
 ### Options
 
@@ -104,6 +108,17 @@ flowchart LR
 `scripts/e2e_lab.sh` runs all five scenarios and checks each status; CI runs it on every push.
 [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) explains what each failure means and how to
 investigate it.
+
+## Limitations
+
+- Host metrics come from Linux `/proc`; on Windows and macOS those checks report `unsupported`
+  rather than guessing.
+- Inside a container, CloudPulse sees only the container's own processes (its PID namespace), but
+  `/proc/meminfo` and `/proc/loadavg` are not namespaced, so memory and load describe the whole host,
+  not the container's cgroup limits. Reading `/sys/fs/cgroup` (`memory.max`, `cpu.max`) is the
+  planned fix.
+- One report per run: no continuous monitoring or alerting (the exit codes let a scheduler or
+  monitoring system do that).
 
 ## Development
 
