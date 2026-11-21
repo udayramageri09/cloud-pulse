@@ -45,7 +45,7 @@ cloudpulse --url http://127.0.0.1:8080/health --tcp 127.0.0.1:8080
 (`app:8000`) — the container is stopped, so there is no listener on that address. In this Docker
 network, a connection attempt to a stopped container's address is silently dropped rather than
 actively refused, so Nginx's own `proxy_connect_timeout` (tuned down to 3s in
-[`simulation/nginx.conf`](simulation/nginx.conf) specifically so this surfaces quickly instead of
+[`simulation/nginx.conf`](../simulation/nginx.conf) specifically so this surfaces quickly instead of
 hanging on Nginx's 60s default) is what actually fires, producing 504 rather than an immediate 502.
 A 502 can still occur on other Docker network drivers/platforms where a stopped container's
 address *is* actively refused at the TCP level — both are "proxy reached, upstream did not

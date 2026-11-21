@@ -1,9 +1,7 @@
 # Screenshots
 
-Every image here is a styled render of genuinely captured output -- the text inside each one is
-exactly what the real CLI, test suite, or Docker lab printed (see [`captures/`](../captures/) for
-the raw text each image was built from, and [`demo-video/tools/render_frames.py`](../demo-video/tools/render_frames.py)
-for the renderer). Nothing shown is fabricated or mocked up.
+Every image here is a styled render of genuinely captured output from CloudPulse 0.1.0 -- the
+text inside each one is exactly what the real CLI, test suite, or Docker lab printed.
 
 | File | What it shows |
 |---|---|
