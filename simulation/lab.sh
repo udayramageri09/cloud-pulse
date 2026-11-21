@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Single-command controls for the CloudPulse failure-simulation lab.
-# Usage: ./simulation/lab.sh <up|down|reset|healthy|unhealthy|stop-app|start-app>
+# Usage: ./simulation/lab.sh <up|down|reset|healthy|unhealthy|stop-app|start-app|logs>
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -27,8 +27,11 @@ case "${1:-}" in
   start-app)
     docker compose start app
     ;;
+  logs)
+    docker compose logs --tail=100
+    ;;
   *)
-    echo "Usage: $0 <up|down|reset|healthy|unhealthy|stop-app|start-app>" >&2
+    echo "Usage: $0 <up|down|reset|healthy|unhealthy|stop-app|start-app|logs>" >&2
     exit 2
     ;;
 esac
