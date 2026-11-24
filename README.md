@@ -150,3 +150,14 @@ docs/             architecture, troubleshooting, deployment, screenshots, demo v
 ## License
 
 [MIT](LICENSE)
+
+## One-command demo
+
+```bash
+git clone https://github.com/udayramageri09/cloud-pulse.git && cd cloud-pulse
+scripts/demo.sh              # starts the Docker lab and walks through 7 steps
+```
+
+Needs Docker (running) and Python 3.10+. CloudPulse installs itself into `.venv` on the first run.
+The lab uses port 18080; change it with `CLOUDPULSE_LAB_PORT=9090 scripts/demo.sh`.
+Press Enter between steps, or run `scripts/demo.sh --no-pause`.
